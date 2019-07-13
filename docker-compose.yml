@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'chat_server'
+      MYSQL_USER: 'chat'
+      MYSQL_PASSWORD: 'avito'
+      MYSQL_ROOT_PASSWORD: 'password'
+  web:
+    image: chat_server
+    build: .
+    command: python /code/chat_server/manage.py runserver 0.0.0.0:9000
+    volumes:
+      - .:/code
+    ports:
+      - "9000:9000"
+    depends_on:
+      - db
+  migration:
+    build: .
+    image: chat_server
+    command: python /code/chat_server/manage.py migrate
+    volumes:
+      - .:/code
+    links:
+      - db
+    depends_on:
+      - db
