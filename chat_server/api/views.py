@@ -10,7 +10,6 @@ def read_data(request):
     return data
 
 def user_add(request):
-    print(request)
     if request.method != 'POST':
         return HttpResponseNotAllowed(permitted_methods=['POST'])
     
@@ -22,7 +21,7 @@ def user_add(request):
         return HttpResponseServerError('user already exists')
 
     return JsonResponse({
-        'id':user.id
+        'user_id':user.id
         })
 
 def create_chat(request):
@@ -47,7 +46,7 @@ def create_chat(request):
           return HttpResponseNotFound('user doesn\'t exists')
 
     return JsonResponse({
-        'id':chat.id,
+        'chat_id':chat.id,
         })
 
 def send_message(request):
@@ -62,7 +61,7 @@ def send_message(request):
     message = Message.objects.create(chat=chat, author=user, text=data['text'])
     
     return JsonResponse({
-        'id':message.id,
+        'message_id':message.id,
         })
 
 def get_list_chats(request):
@@ -85,7 +84,7 @@ def get_list_chats(request):
         }
         list_chats.append(packet)
 
-    return JsonResponse({'chats':list_chats})
+    return JsonResponse({'list_chats':list_chats})
 
 
 def get_list_messages(request):
@@ -99,6 +98,7 @@ def get_list_messages(request):
     list_messages = []
     for message in messages:
         packet = {
+            'message_id': message.id,
             'chat_id': message.chat.id,
             'author_id': message.author.id,
             'text': message.text,
@@ -106,4 +106,4 @@ def get_list_messages(request):
         }
         list_messages.append(packet)
     
-    return JsonResponse({'messages':list_messages})
+    return JsonResponse({'list_messages':list_messages})
