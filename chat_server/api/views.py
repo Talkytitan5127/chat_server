@@ -1,5 +1,5 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse, HttpResponse, HttpResponseNotAllowed, HttpResponseNotFound, HttpResponseServerError
+from django.shortcuts import render
+from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 import json
 from .models import User, Chat, Message
@@ -11,14 +11,20 @@ def read_data(request):
 
 def user_add(request):
     if request.method != 'POST':
-        return HttpResponseNotAllowed(permitted_methods=['POST'])
+        return JsonResponse({
+            'status_code': 405,
+            'text': 'Allow methods: POST',
+        })
     
     data = read_data(request)
     username = data['username']
 
     user, created = User.objects.get_or_create(username=username)
     if not created:
-        return HttpResponseServerError('user already exists')
+        return JsonResponse({
+            'status_code': 500,
+            'text': 'user already exists'
+        })
 
     return JsonResponse({
         'user_id':user.id
@@ -26,7 +32,10 @@ def user_add(request):
 
 def create_chat(request):
     if request.method != 'POST':
-        return HttpResponseNotAllowed(permitted_methods=['POST'])
+        return JsonResponse({
+            'status_code': 405,
+            'text': 'Allow methods: POST',
+        })
     
     data = read_data(request)
     
@@ -35,7 +44,10 @@ def create_chat(request):
 
     chat, created = Chat.objects.get_or_create(name=chatname)
     if not created:
-        return HttpResponseServerError('chat already exists')
+        return JsonResponse({
+            'status_code': 500,
+            'text': 'chat already exists',
+        })
 
     for user_id in users:
         try:
@@ -43,7 +55,10 @@ def create_chat(request):
             chat.users.add(user)
         except ObjectDoesNotExist:
           chat.delete()
-          return HttpResponseNotFound('user doesn\'t exists')
+          return JsonResponse({
+            'status_code': 404,
+            'text': 'user not found',
+        })
 
     return JsonResponse({
         'chat_id':chat.id,
@@ -51,12 +66,28 @@ def create_chat(request):
 
 def send_message(request):
     if request.method != 'POST':
-        return HttpResponseNotAllowed(permitted_methods=['POST'])
+        return JsonResponse({
+            'status_code': 405,
+            'text': 'Allow methods: POST',
+        })
 
     data = read_data(request)
 
-    chat = get_object_or_404(Chat, id=data['chat'])
-    user = get_object_or_404(chat.users, id=data['author'])
+    try:
+        chat = Chat.objects.get(id=data['chat'])
+    except ObjectDoesNotExist:
+        return JsonResponse({
+            'status_code': 404,
+            'text': 'chat not found',
+        })
+
+    try:
+        user = chat.users.get(id=data['author'])
+    except ObjectDoesNotExist:
+        JsonResponse({
+            'status_code': 404,
+            'text': 'user not found',
+        })
     
     message = Message.objects.create(chat=chat, author=user, text=data['text'])
     
@@ -66,11 +97,20 @@ def send_message(request):
 
 def get_list_chats(request):
     if request.method != 'POST':
-        return HttpResponseNotAllowed(permitted_methods=['POST'])
+        return JsonResponse({
+            'status_code': 405,
+            'text': 'Allow methods: POST',
+        })
 
     data = read_data(request)
 
-    user = get_object_or_404(User, id=data['user'])
+    try:
+        user = User.objects.get(id=data['user'])
+    except ObjectDoesNotExist:
+        JsonResponse({
+            'status_code': 404,
+            'text': 'user not found',
+        })
     chats = user.chat_set.all()
 
     list_chats = []
@@ -89,7 +129,10 @@ def get_list_chats(request):
 
 def get_list_messages(request):
     if request.method != 'POST':
-        return HttpResponseNotAllowed(permitted_methods=['POST'])
+        return JsonResponse({
+            'status_code': 405,
+            'text': 'Allow methods: POST',
+        })
 
     data = read_data(request)
 
