@@ -10,6 +10,8 @@ services:
       MYSQL_PASSWORD: 'avito'
       MYSQL_ROOT_PASSWORD: 'password'
   web:
+    depends_on:
+      - db
     image: chat_server
     build: .
     command: python /code/chat_server/manage.py runserver 0.0.0.0:9000
@@ -17,9 +19,9 @@ services:
       - .:/code
     ports:
       - "9000:9000"
+  migration:
     depends_on:
       - db
-  migration:
     build: .
     image: chat_server
     command: python /code/chat_server/manage.py migrate
@@ -27,5 +29,4 @@ services:
       - .:/code
     links:
       - db
-    depends_on:
-      - db
+      
