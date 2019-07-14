@@ -14,7 +14,7 @@ services:
       - db
     image: chat_server
     build: .
-    command: python /code/chat_server/manage.py runserver 0.0.0.0:9000
+    command: sh -c './wait_for.sh db:3306 -- python /code/chat_server/manage.py runserver 0.0.0.0:9000'
     volumes:
       - .:/code
     ports:
@@ -24,7 +24,7 @@ services:
       - db
     build: .
     image: chat_server
-    command: python /code/chat_server/manage.py migrate
+    command: sh -c './wait_for.sh db:3306 -- python /code/chat_server/manage.py migrate'
     volumes:
       - .:/code
     links:
